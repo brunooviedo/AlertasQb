@@ -58,6 +58,7 @@ releases/*.exe
 # Config files with sensitive data
 config/database.json
 config/secrets.json
+.env
 
 # Test files
 test_*.py

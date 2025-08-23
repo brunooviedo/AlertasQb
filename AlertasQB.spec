@@ -1,74 +1,20 @@
 # -*- mode: python ; coding: utf-8 -*-
 
-block_cipher = None
 
 a = Analysis(
     ['main.py'],
     pathex=[],
     binaries=[],
-    datas=[
-        ('data', 'data'),
-        ('config', 'config'),
-    ],
-    hiddenimports=[
-        'PySide6.QtCore',
-        'PySide6.QtGui', 
-        'PySide6.QtWidgets',
-        'PySide6.QtWidgets.QApplication',
-        'PySide6.QtWidgets.QSplashScreen',
-        'PySide6.QtWidgets.QLabel',
-        'PySide6.QtCore.Qt',
-        'PySide6.QtCore.QTimer',
-        'PySide6.QtGui.QPixmap',
-        'PySide6.QtGui.QFont',
-        'matplotlib.backends.backend_agg',
-        'matplotlib.figure',
-        'matplotlib.pyplot',
-        'pandas',
-        'openpyxl',
-        'numpy',
-        'seaborn',
-    ],
+    datas=[('config', 'config'), ('data', 'data'), ('src', 'src')],
+    hiddenimports=['PySide6.QtCore', 'PySide6.QtGui', 'PySide6.QtWidgets', 'pandas', 'numpy', 'matplotlib', 'openpyxl', 'requests', 'bcrypt'],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
-    excludes=[
-        'matplotlib.backends.backend_qt5agg',
-        'matplotlib.backends.backend_tkagg',
-        'matplotlib.backends.backend_macosx',
-        'matplotlib.backends._backend_pdf',
-        'matplotlib.backends._backend_ps',
-        'matplotlib.backends._backend_svg',
-        'tkinter',
-        'PyQt5',
-        'PyQt6',
-        'IPython',
-        'jupyter',
-        'notebook',
-        'zmq',
-        'tornado',
-        'scipy.spatial.cKDTree',
-        'scipy.linalg.cython_blas',
-        'scipy.linalg.cython_lapack',
-        'scipy.special._ufuncs_cxx',
-        'sqlite3',
-        'urllib3',
-        'requests',
-        'certifi',
-        'charset_normalizer',
-        'idna',
-        'test',
-        'tests',
-        'unittest',
-        'doctest',
-    ],
-    win_no_prefer_redirects=False,
-    win_private_assemblies=False,
-    cipher=block_cipher,
+    excludes=[],
     noarchive=False,
+    optimize=0,
 )
-
-pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
+pyz = PYZ(a.pure)
 
 exe = EXE(
     pyz,
@@ -82,17 +28,14 @@ exe = EXE(
     upx=True,
     console=False,
     disable_windowed_traceback=False,
+    argv_emulation=False,
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    version='version_info.txt',
-    icon=None,
 )
-
 coll = COLLECT(
     exe,
     a.binaries,
-    a.zipfiles,
     a.datas,
     strip=False,
     upx=True,

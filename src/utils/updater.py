@@ -35,16 +35,48 @@ class UpdateChecker(QObject):
     def check_for_updates(self):
         """Verifica si hay actualizaciones disponibles"""
         try:
-            # URL del servidor de actualizaciones (puedes usar GitHub Releases, servidor propio, etc.)
-            version_url = f"{self.update_server_url}/version.json"
+            # Preparar headers para autenticación (repositorio privado)
+            headers = {}
+            
+            # Si hay token de GitHub, usarlo para repos privados
+            github_token = os.getenv("GITHUB_TOKEN")
+            if not github_token:
+                # Intentar leer desde .env
+                env_file = Path(".env")
+                if env_file.exists():
+                    with open(env_file, 'r') as f:
+                        for line in f:
+                            if line.startswith("GITHUB_TOKEN="):
+                                github_token = line.split("=", 1)[1].strip()
+                                break
+            
+            if github_token:
+                headers["Authorization"] = f"Bearer {github_token}"
+                headers["Accept"] = "application/vnd.github+json"
+            
+            # Si es una URL de GitHub API, usar directamente la API
+            if "api.github.com" in self.update_server_url:
+                version_url = self.update_server_url
+            else:
+                version_url = f"{self.update_server_url}/version.json"
             
             print(f"🔍 Verificando actualizaciones en: {version_url}")
             
-            # Realizar petición HTTP con timeout
-            response = requests.get(version_url, timeout=self.timeout)
+            # Realizar petición HTTP con timeout y headers
+            response = requests.get(version_url, timeout=self.timeout, headers=headers)
             response.raise_for_status()
             
-            version_info = response.json()
+            # Si es la API de GitHub, extraer información del release
+            if "api.github.com" in self.update_server_url:
+                release_info = response.json()
+                version_info = {
+                    'version': release_info.get('tag_name', '1.0.0').lstrip('v'),
+                    'download_url': release_info.get('assets', [{}])[0].get('browser_download_url', ''),
+                    'changelog': release_info.get('body', 'Sin información de cambios'),
+                    'release_date': release_info.get('published_at', 'Desconocida')
+                }
+            else:
+                version_info = response.json()
             
             latest_version = version_info.get('version', '1.0.0')
             download_url = version_info.get('download_url', '')
