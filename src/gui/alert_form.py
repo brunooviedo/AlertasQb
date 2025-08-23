@@ -70,7 +70,14 @@ class AlertForm(QWidget):
         basic_layout.addRow("Tipo de Alerta:", self.alert_type_combo)
 
         self.condition_combo = QComboBox()
-        self.condition_combo.addItems(["transgresiva", "progresiva", "crítica"])
+        self.condition_combo.addItems([
+            "Transgresiva", 
+            "Progresiva", 
+            "Crítica", 
+            "Regresiva", 
+            "Transgresiva-Progresiva", 
+            "Progresiva-Crítica"
+        ])
         self.condition_combo.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         basic_layout.addRow("Condición:", self.condition_combo)
 

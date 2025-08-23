@@ -313,7 +313,7 @@ class DataManagerWidget(QWidget):
                 ejemplo = {
                     "FechaHora": "01/01/2024 10:30:00",
                     "TipoAlerta": "Amarilla",
-                    "Condicion": "transgresiva",
+                    "Condicion": "Transgresiva-Progresiva",
                     "Respaldo": "C:\\documentos\\presentacion.pptx",
                     "Colapso": "No",
                     "FechaHoraColapso": "",

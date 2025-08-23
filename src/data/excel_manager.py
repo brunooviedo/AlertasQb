@@ -11,6 +11,17 @@ import hashlib
 from openpyxl.styles import PatternFill, Font, Alignment
 from openpyxl.utils.dataframe import dataframe_to_rows
 
+# Constantes de validación
+VALID_ALERT_TYPES = ['Roja', 'Amarilla', 'Naranja']
+VALID_CONDITIONS = [
+    'Transgresiva', 
+    'Progresiva', 
+    'Crítica', 
+    'Regresiva', 
+    'Transgresiva-Progresiva', 
+    'Progresiva-Crítica'
+]
+
 
 class ExcelManager:
     """Gestor para operaciones con Excel"""
@@ -107,15 +118,14 @@ class ExcelManager:
                 # Para separadores, permitir valores vacíos en TipoAlerta y Condicion
                 # Para registros normales, requerir valores válidos
                 if 'TipoAlerta' in df.columns:
-                    tipos_validos = ['Roja', 'Amarilla', 'Naranja']
-                    mask_tipo_valido = df['TipoAlerta'].isin(tipos_validos)
+                    mask_tipo_valido = df['TipoAlerta'].isin(VALID_ALERT_TYPES)
                     # Permitir TipoAlerta vacía solo para separadores
                     mask_tipo_ok = mask_tipo_valido | mask_separador
                     mask_valid_rows &= mask_tipo_ok
                 
                 # Para Condicion, aplicar la misma lógica
                 if 'Condicion' in df.columns:
-                    mask_condicion_valida = df['Condicion'].notna() & (df['Condicion'].astype(str).str.strip() != '')
+                    mask_condicion_valida = df['Condicion'].isin(VALID_CONDITIONS)
                     # Permitir Condicion vacía solo para separadores
                     mask_condicion_ok = mask_condicion_valida | mask_separador
                     mask_valid_rows &= mask_condicion_ok
