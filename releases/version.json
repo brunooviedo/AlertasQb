@@ -1,8 +1,8 @@
 {
   "version": "1.2.1",
   "download_url": "https://tu-servidor.com/releases/AlertasQB-v1.2.1.zip",
-  "changelog": "Sistema de actualización automática implementado - Gráficos de torta con colores por tipo de alerta mejorados",
-  "release_date": "2025-08-22 20:25:43",
+  "changelog": "Sistema de actualizaciones automáticas - Release inicial",
+  "release_date": "2025-08-22 20:39:06",
   "file_size": 87834819,
   "checksum": "sha256_here"
 }

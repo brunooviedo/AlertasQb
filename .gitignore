@@ -48,9 +48,12 @@ Thumbs.db
 *.bak
 backup/
 
-# Release files (we'll add them manually when needed)
+# Release files (keep version.json, exclude large ZIP files)
 releases/*.zip
 releases/*.exe
+
+# Keep version.json for reference
+!releases/version.json
 
 # Config files with sensitive data
 config/database.json
