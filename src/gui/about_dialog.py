@@ -10,6 +10,8 @@ from PySide6.QtGui import QFont, QPixmap
 
 # Importar estilos centralizados
 from src.gui.styles import DialogStyles
+# Importar versión actual
+from src.utils.version import APP_VERSION
 
 class AboutDialog(QDialog):
     """Diálogo personalizado para mostrar información sobre la aplicación"""
@@ -38,7 +40,7 @@ class AboutDialog(QDialog):
         layout.addWidget(title_label)
         
         # Versión
-        version_label = QLabel("Versión 1.0")
+        version_label = QLabel(f"Versión {APP_VERSION}")
         version_label.setAlignment(Qt.AlignCenter)
         version_label.setProperty("aboutVersion", True)  # Usar propiedad CSS
         layout.addWidget(version_label)

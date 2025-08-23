@@ -1,8 +1,8 @@
 {
-  "version": "1.2.2",
-  "download_url": "https://tu-servidor.com/releases/AlertasQB-v1.2.2.zip",
-  "changelog": "Nuevas condiciones: Transgresiva-Progresiva y Progresiva-Crítica",
-  "release_date": "2025-08-22 21:37:29",
-  "file_size": 89831416,
+  "version": "1.2.3",
+  "download_url": "https://tu-servidor.com/releases/AlertasQB-v1.2.3.zip",
+  "changelog": "Corregida versión en diálogo About y mejorado logging de actualizaciones",
+  "release_date": "2025-08-22 22:28:19",
+  "file_size": 89731073,
   "checksum": "sha256_here"
 }
