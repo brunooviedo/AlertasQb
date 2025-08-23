@@ -21,9 +21,17 @@ class AlertsDataViewer(QWidget):
     def __init__(self):
         super().__init__()
         self.excel_manager = ExcelManager()
+        self.data_loaded = False  # Flag para controlar carga diferida
         self.setup_ui()
         self.apply_styles()
-        self.load_data()
+        # NO cargar datos iniciales - se hace cuando se muestra la pestaña
+        
+    def ensure_data_loaded(self):
+        """Cargar datos solo cuando se necesiten (lazy loading optimizado)"""
+        if not self.data_loaded:
+            print("📊 Cargando datos del visor por primera vez...")
+            self.load_data()
+            self.data_loaded = True
 
     # ---------------------------- UI SETUP ---------------------------- #
     def setup_ui(self):

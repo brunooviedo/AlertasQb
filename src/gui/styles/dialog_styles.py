@@ -108,7 +108,7 @@ class DialogStyles:
                 font-size: {AppTheme.FONT_SIZE_NORMAL};
                 font-weight: bold;
                 font-family: {AppTheme.FONT_FAMILY};
-                min-width: 180px;
+                min-width: 220px;
             }}
             
             QPushButton[aboutUpdate="true"]:hover {{

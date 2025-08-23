@@ -12,7 +12,7 @@ from PySide6.QtGui import QFont, QPalette, QPixmap
 import pandas as pd
 import numpy as np
 
-# Importaciones lazy de matplotlib - se cargan solo cuando se necesitan
+# Importaciones optimizadas - las librerías pesadas ya están precargadas en main.py
 MATPLOTLIB_AVAILABLE = None
 matplotlib = None
 plt = None
@@ -21,32 +21,26 @@ sns = None
 FigureCanvas = None
 
 def _load_matplotlib():
-    """Carga matplotlib de forma lazy solo cuando se necesita"""
+    """Carga matplotlib - optimizado para librerías precargadas"""
     global MATPLOTLIB_AVAILABLE, matplotlib, plt, Figure, sns, FigureCanvas
     
     if MATPLOTLIB_AVAILABLE is not None:
         return MATPLOTLIB_AVAILABLE
     
     try:
-        # Configurar matplotlib para usar backend sin interfaz gráfica ANTES de cualquier import
+        # Las librerías ya están precargadas, solo necesitamos importarlas
         import matplotlib as mpl
-        mpl.use('Agg', force=True)  # Force backend para ejecutables
-        
-        # Configuraciones adicionales para ejecutables
         import matplotlib.pyplot as pyplot
         from matplotlib.figure import Figure as MatplotlibFigure
         from matplotlib.backends.backend_agg import FigureCanvasAgg
         
-        # Configurar matplotlib para mejor compatibilidad con ejecutables
-        pyplot.ioff()  # Desactivar modo interactivo
-        
-        # Asignar a variables globales
+        # Asignar a variables globales (configuración ya hecha en main.py)
         matplotlib = mpl
         plt = pyplot
         Figure = MatplotlibFigure
         FigureCanvas = FigureCanvasAgg
         
-        # Importar seaborn opcionalmente
+        # Importar seaborn opcionalmente (también precargado)
         try:
             import seaborn
             sns = seaborn
@@ -54,7 +48,7 @@ def _load_matplotlib():
             sns = None
         
         MATPLOTLIB_AVAILABLE = True
-        print("✓ matplotlib cargado dinámicamente con backend Agg")
+        print("✓ matplotlib cargado desde precarga (optimizado)")
         
     except ImportError as e:
         print(f"⚠ matplotlib no disponible: {e}")
@@ -210,9 +204,18 @@ class Dashboard(QWidget):
         super().__init__(parent)
         self.excel_manager = ExcelManager()
         self.current_data = pd.DataFrame()
+        self.data_loaded = False  # Flag para controlar carga diferida
+        self.refresh_in_progress = False  # Flag para evitar refresh múltiples
         self.setup_ui()
         self.apply_styles()
-        self.load_initial_data()
+        # NO cargar datos iniciales aquí - se hace cuando se muestra la pestaña
+        
+    def ensure_data_loaded(self):
+        """Cargar datos solo cuando se necesiten (lazy loading optimizado)"""
+        if not self.data_loaded:
+            print("📊 Cargando datos del dashboard por primera vez...")
+            self.load_initial_data()
+            self.data_loaded = True
         
     def setup_ui(self):
         """Configura la interfaz de usuario"""
@@ -461,8 +464,8 @@ class Dashboard(QWidget):
             
             if data.empty:
                 self.current_data = pd.DataFrame()
-                self.update_filters()
-                self.refresh_charts()
+                self.update_filters(refresh_charts=False)
+                self.refresh_charts()  # Un solo refresh
                 return
             
             # Los datos ya vienen procesados del ExcelManager con Año y Mes
@@ -497,8 +500,9 @@ class Dashboard(QWidget):
                 print(f"  - Condiciones: {condiciones}")
                 
             self.current_data = data_processed
-            self.update_filters()
-            self.refresh_charts()
+            print("🔄 Actualizando filtros y gráficos...")
+            self.update_filters(refresh_charts=False)  # No refresh automático
+            self.refresh_charts()  # Un solo refresh al final
             
         except Exception as e:
             print(f"Error actualizando dashboard: {e}")
@@ -506,9 +510,14 @@ class Dashboard(QWidget):
             traceback.print_exc()
             self.current_data = pd.DataFrame()
             
-    def update_filters(self):
+    def update_filters(self, refresh_charts=True):
         """Actualiza las opciones de los filtros"""
         try:
+            # Desconectar signals temporalmente para evitar refresh múltiples
+            self.year_combo.currentTextChanged.disconnect()
+            self.month_combo.currentTextChanged.disconnect()
+            self.type_combo.currentTextChanged.disconnect()
+            
             # Actualizar filtro de años
             self.year_combo.clear()
             self.year_combo.addItem("Todos los años")
@@ -529,7 +538,17 @@ class Dashboard(QWidget):
                     self.type_combo.addItem(str(alert_type))
                 print(f"✅ Tipos cargados en filtro: {types}")
                 
+            # Reconectar signals
+            self.year_combo.currentTextChanged.connect(self.on_filter_changed)
+            self.month_combo.currentTextChanged.connect(self.on_filter_changed)
+            self.type_combo.currentTextChanged.connect(self.on_filter_changed)
+                
             print(f"✅ Filtros actualizados correctamente")
+            
+            # Solo hacer refresh si se solicita (evitar spam de renders)
+            if refresh_charts:
+                print("🔄 Auto-refresh después de actualizar filtros")
+                self.refresh_charts()
             
         except Exception as e:
             print(f"❌ Error actualizando filtros: {e}")
@@ -540,10 +559,20 @@ class Dashboard(QWidget):
                 self.type_combo.addItem(str(alert_type))
                 
     def refresh_charts(self):
-        """Actualiza todos los gráficos y KPIs"""
-        filtered_data = self.get_filtered_data()
-        self.update_kpis(filtered_data)
-        self.update_charts(filtered_data)
+        """Actualiza todos los gráficos y KPIs con protección anti-spam"""
+        if self.refresh_in_progress:
+            print("🚫 Refresh ya en progreso, evitando render duplicado")
+            return
+            
+        self.refresh_in_progress = True
+        try:
+            print("🎨 Iniciando refresh de gráficos...")
+            filtered_data = self.get_filtered_data()
+            self.update_kpis(filtered_data)
+            self.update_charts(filtered_data)
+            print("✅ Refresh de gráficos completado")
+        finally:
+            self.refresh_in_progress = False
         
     def update_kpis(self, data):
         """Actualiza los valores de los KPIs"""
@@ -743,7 +772,8 @@ class Dashboard(QWidget):
                             autotext.set_color(color)
                             autotext.set_weight('bold')
                             autotext.set_fontsize(10)
-                            text.set_color(color)
+                            # Las etiquetas de la leyenda siempre en negro para visibilidad
+                            text.set_color('black')
                             text.set_fontsize(9)
                             text.set_weight('bold')
                 

@@ -7,13 +7,14 @@ from PySide6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
 from PySide6.QtCore import Qt
 from datetime import datetime
 
-# Imports lazy - se cargan solo cuando se necesitan
+# Imports optimizados - Los módulos pesados ya están precargados en main.py
 from src.gui.styles.main_styles import MainWindowStyles
 from src.gui.menu.menu_manager import MenuManager
 from src.gui.components.header_widget import HeaderWidget
 from src.auth.login_manager import User
 
-# Componentes pesados se importan dinámicamente
+# Widgets pesados se importan directamente (ya precargados)
+# Nota: Los imports se harán cuando se instancien por primera vez
 _alert_form = None
 _dashboard = None
 _data_manager = None
@@ -22,36 +23,39 @@ _settings_dialog = None
 _about_dialog = None
 
 def _get_alert_form():
-    """Carga lazy del formulario de alertas"""
+    """Obtener formulario de alertas (módulo ya precargado)"""
     global _alert_form
     if _alert_form is None:
-        from src.gui.alert_form import AlertForm
+        from src.gui.alert_form import AlertForm  # Ya precargado
         _alert_form = AlertForm
+        print("✓ AlertForm instanciado (precargado)")
     return _alert_form()
 
 def _get_dashboard():
-    """Carga lazy del dashboard"""
+    """Obtener dashboard (módulo ya precargado)"""
     global _dashboard
     if _dashboard is None:
-        from src.gui.dashboard import Dashboard
+        from src.gui.dashboard import Dashboard  # Ya precargado
         _dashboard = Dashboard
-        print("✓ Dashboard cargado dinámicamente")
+        print("✓ Dashboard instanciado (precargado)")
     return _dashboard()
 
 def _get_data_manager():
-    """Carga lazy del gestor de datos"""
+    """Obtener gestor de datos (módulo ya precargado)"""
     global _data_manager
     if _data_manager is None:
-        from src.gui.data_manager_new import DataManagerWidget
+        from src.gui.data_manager_new import DataManagerWidget  # Ya precargado
         _data_manager = DataManagerWidget
+        print("✓ DataManager instanciado (precargado)")
     return _data_manager()
 
 def _get_alerts_viewer():
-    """Carga lazy del visualizador de alertas"""
+    """Obtener visualizador de alertas (módulo ya precargado)"""
     global _alerts_viewer
     if _alerts_viewer is None:
-        from src.gui.alerts_data_viewer import AlertsDataViewer
+        from src.gui.alerts_data_viewer import AlertsDataViewer  # Ya precargado
         _alerts_viewer = AlertsDataViewer
+        print("✓ AlertsViewer instanciado (precargado)")
     return _alerts_viewer()
 
 def _get_settings_dialog():
@@ -206,9 +210,14 @@ class MainWindow(QMainWindow):
             self.tab_widget.removeTab(1)
             self.tab_widget.insertTab(1, self.dashboard, "Dashboard")
             self.tab_widget.setCurrentIndex(1)
+            # NUEVO: Cargar datos solo cuando se muestra por primera vez
+            self.dashboard.ensure_data_loaded()
             # Conectar señal de alerta guardada
             if hasattr(self, 'alert_form'):
                 self.alert_form.alert_saved.connect(self.dashboard.refresh_charts)
+        elif index == 1 and self.dashboard is not None:
+            # Dashboard ya existe, asegurar que los datos estén cargados
+            self.dashboard.ensure_data_loaded()
                 
         elif index == 2 and self.alerts_data_viewer is None:  # Datos de alertas tab
             print("🔄 Cargando Visor de Datos...")
@@ -216,9 +225,14 @@ class MainWindow(QMainWindow):
             self.tab_widget.removeTab(2)
             self.tab_widget.insertTab(2, self.alerts_data_viewer, "Datos de Alertas")
             self.tab_widget.setCurrentIndex(2)
+            # NUEVO: Cargar datos solo cuando se muestra por primera vez
+            self.alerts_data_viewer.ensure_data_loaded()
             # Conectar señal de alerta guardada
             if hasattr(self, 'alert_form'):
                 self.alert_form.alert_saved.connect(self.alerts_data_viewer.load_data)
+        elif index == 2 and self.alerts_data_viewer is not None:
+            # Visor ya existe, asegurar que los datos estén cargados
+            self.alerts_data_viewer.ensure_data_loaded()
                 
         elif index == 3 and self.data_manager is None:  # Gestión de datos tab
             print("🔄 Cargando Gestión de Datos...")

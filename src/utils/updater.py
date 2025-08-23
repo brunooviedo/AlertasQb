@@ -281,9 +281,134 @@ class UpdateDialog(QDialog):
             self.on_download_failed(f"Error al instalar: {str(e)}")
     
     def on_download_failed(self, error):
-        """Cuando la descarga falla"""
-        QMessageBox.critical(self, "Error de Actualización", 
-                           f"❌ Error al actualizar:\n{error}")
+        """Cuando la descarga falla - ofrecer descarga manual"""
+        # Crear mensaje personalizado con enlace de descarga manual
+        msg = QMessageBox(self)
+        msg.setIcon(QMessageBox.Warning)
+        msg.setWindowTitle("⚠️ Error de Descarga Automática")
+        
+        # Estilos para el mensaje
+        msg.setStyleSheet("""
+            QMessageBox {
+                background-color: white;
+                font-family: 'Segoe UI', Arial, sans-serif;
+                font-size: 14px;
+                min-width: 500px;
+            }
+            QMessageBox QLabel {
+                background-color: white;
+                color: #2c3e50;
+                padding: 15px;
+                font-size: 14px;
+            }
+            QMessageBox QPushButton {
+                background: qlineargradient(
+                    x1: 0, y1: 0, x2: 0, y2: 1,
+                    stop: 0 #3153E4,
+                    stop: 1 #1a237e
+                );
+                color: white;
+                border: none;
+                border-radius: 5px;
+                padding: 10px 25px;
+                font-size: 14px;
+                font-weight: bold;
+                min-width: 120px;
+                margin: 5px;
+            }
+            QMessageBox QPushButton:hover {
+                background: qlineargradient(
+                    x1: 0, y1: 0, x2: 0, y2: 1,
+                    stop: 0 #1a237e,
+                    stop: 1 #0d1142
+                );
+            }
+        """)
+        
+        # Detectar tipo de error para mejor mensaje
+        error_lower = error.lower()
+        if any(keyword in error_lower for keyword in ['ssl', 'certificate', 'cert']):
+            error_type = "🔒 Certificados SSL bloqueados"
+            suggestion = "Su firewall o antivirus está bloqueando conexiones seguras."
+        elif any(keyword in error_lower for keyword in ['network', 'connection', 'timeout']):
+            error_type = "🌐 Problema de conexión"
+            suggestion = "Verifique su conexión a Internet o proxy corporativo."
+        elif any(keyword in error_lower for keyword in ['403', 'forbidden', 'unauthorized']):
+            error_type = "🚫 Acceso restringido"
+            suggestion = "El servidor está bloqueando la descarga automática."
+        else:
+            error_type = "⚠️ Error de descarga"
+            suggestion = "La descarga automática no se pudo completar."
+        
+        # Construir URL de descarga manual
+        download_url = self.update_info.get('download_url', '')
+        if not download_url:
+            # Generar URL del release de GitHub
+            version = self.update_info.get('version', 'latest')
+            download_url = f"https://github.com/brunooviedo/AlertasQb/releases/tag/v{version}"
+        
+        # Mensaje principal
+        msg.setText(f"<h2 style='color: #FF9040; margin-bottom: 15px;'>{error_type}</h2>")
+        
+        # Información detallada
+        msg.setInformativeText(f"""
+            <p style='color: #2c3e50; font-size: 14px; margin: 10px 0;'>
+                <strong>Problema:</strong> {suggestion}
+            </p>
+            
+            <p style='color: #2c3e50; font-size: 14px; margin: 15px 0;'>
+                <strong>📥 Descarga Manual:</strong>
+            </p>
+            
+            <p style='background: #f8f9fa; padding: 10px; border-radius: 5px; margin: 10px 0;'>
+                <strong>1.</strong> Abra su navegador web<br>
+                <strong>2.</strong> Visite: <a href="{download_url}" style="color: #3153E4; text-decoration: none;">
+                <code style="background: #e9ecef; padding: 2px 5px; border-radius: 3px;">{download_url}</code></a><br>
+                <strong>3.</strong> Descargue el archivo <code>AlertasQB-Standalone-v{self.update_info.get('version', 'latest')}.zip</code><br>
+                <strong>4.</strong> Extraiga y ejecute <code>AlertasQB.exe</code>
+            </p>
+            
+            <p style='color: #6c757d; font-size: 12px; margin: 15px 0 5px 0;'>
+                <strong>Error técnico:</strong> {error}
+            </p>
+        """)
+        
+        # Botones personalizados
+        copy_button = msg.addButton("📋 Copiar", QMessageBox.ActionRole)
+        open_button = msg.addButton("🌐 Navegador", QMessageBox.ActionRole)
+        close_button = msg.addButton("Cerrar", QMessageBox.RejectRole)
+        
+        # Ejecutar diálogo
+        reply = msg.exec()
+        
+        # Manejar acciones del usuario
+        if msg.clickedButton() == copy_button:
+            # Copiar URL al portapapeles
+            try:
+                from PySide6.QtGui import QClipboard
+                from PySide6.QtWidgets import QApplication
+                clipboard = QApplication.clipboard()
+                clipboard.setText(download_url)
+                
+                # Confirmar que se copió
+                QMessageBox.information(self, "✅ Enlace Copiado", 
+                                      f"El enlace de descarga se copió al portapapeles:\n\n{download_url}")
+            except Exception as e:
+                QMessageBox.warning(self, "Error al Copiar", 
+                                  f"No se pudo copiar el enlace: {str(e)}")
+        
+        elif msg.clickedButton() == open_button:
+            # Abrir URL en el navegador
+            try:
+                import webbrowser
+                webbrowser.open(download_url)
+                QMessageBox.information(self, "🌐 Navegador Abierto", 
+                                      "Se abrió la página de descarga en su navegador.")
+            except Exception as e:
+                QMessageBox.warning(self, "Error al Abrir", 
+                                  f"No se pudo abrir el navegador: {str(e)}")
+        
+        # Cerrar el diálogo de actualización
         self.reject()
     
     def install_update(self, update_file):
