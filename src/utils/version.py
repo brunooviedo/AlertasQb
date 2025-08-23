@@ -3,7 +3,7 @@ Configuración de versión de la aplicación
 """
 
 # Versión actual de la aplicación (ACTUALIZAR CADA VEZ QUE HAGAS CAMBIOS)
-APP_VERSION = "1.2.3"
+APP_VERSION = "1.2.4"
 
 # Servidor de actualizaciones (GitHub API para releases)
 UPDATE_SERVER_URL = "https://api.github.com/repos/brunooviedo/AlertasQb/releases/latest"
