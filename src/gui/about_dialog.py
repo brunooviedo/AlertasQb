@@ -79,18 +79,92 @@ class AboutDialog(QDialog):
         developer_label.setProperty("aboutDeveloper", True)  # Usar propiedad CSS
         layout.addWidget(developer_label)
         
-        # Botón de cerrar
+        # Botones de acción
         button_layout = QHBoxLayout()
+        
+        # Botón de verificar actualizaciones
+        update_button = QPushButton("🔄 Verificar Actualizaciones")
+        update_button.setFixedSize(180, 35)
+        update_button.setProperty("aboutUpdate", True)  # Usar propiedad CSS
+        update_button.clicked.connect(self.check_for_updates)
+        
+        # Botón de cerrar
         close_button = QPushButton("Cerrar")
         close_button.setFixedSize(100, 35)
         close_button.setProperty("aboutClose", True)  # Usar propiedad CSS
         close_button.clicked.connect(self.accept)
         
         button_layout.addStretch()
+        button_layout.addWidget(update_button)
         button_layout.addWidget(close_button)
         button_layout.addStretch()
         layout.addLayout(button_layout)
         
+    def check_for_updates(self):
+        """Verificar actualizaciones manualmente desde el diálogo About"""
+        try:
+            from PySide6.QtWidgets import QMessageBox
+            from src.utils.updater import UpdateChecker
+            from src.utils.version import UPDATE_SERVER_URL
+            
+            # Cambiar texto del botón mientras verifica
+            sender = self.sender()
+            original_text = sender.text()
+            sender.setText("⏳ Verificando...")
+            sender.setEnabled(False)
+            
+            # Procesar eventos para mostrar el cambio
+            from PySide6.QtWidgets import QApplication
+            QApplication.processEvents()
+            
+            # Verificar actualizaciones
+            checker = UpdateChecker(APP_VERSION, UPDATE_SERVER_URL)
+            update_info = checker.check_for_updates()
+            
+            # Restaurar botón
+            sender.setText(original_text)
+            sender.setEnabled(True)
+            
+            if update_info:
+                # Mostrar diálogo de actualización disponible
+                reply = QMessageBox.question(
+                    self,
+                    "Actualización Disponible",
+                    f"🆕 Nueva versión disponible: v{update_info['version']}\n\n"
+                    f"Versión actual: v{APP_VERSION}\n"
+                    f"Versión disponible: v{update_info['version']}\n\n"
+                    f"¿Desea descargar la actualización ahora?",
+                    QMessageBox.Yes | QMessageBox.No,
+                    QMessageBox.Yes
+                )
+                
+                if reply == QMessageBox.Yes:
+                    # Iniciar proceso de actualización
+                    from src.utils.updater import AutoUpdater
+                    updater = AutoUpdater(APP_VERSION, UPDATE_SERVER_URL, self.parent())
+                    updater.start_update_process(update_info)
+                    
+            else:
+                # No hay actualizaciones
+                QMessageBox.information(
+                    self,
+                    "Sin Actualizaciones",
+                    f"✅ Su aplicación está actualizada\n\nVersión actual: v{APP_VERSION}"
+                )
+                
+        except Exception as e:
+            QMessageBox.warning(
+                self,
+                "Error de Conexión",
+                f"⚠️ No se pudo verificar actualizaciones:\n{str(e)}\n\n"
+                f"Verifique su conexión a Internet e intente nuevamente."
+            )
+            
+            # Restaurar botón en caso de error
+            if 'sender' in locals():
+                sender.setText(original_text)
+                sender.setEnabled(True)
+    
     @staticmethod
     def show_about(parent=None):
         """Método estático para mostrar el diálogo"""

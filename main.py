@@ -42,6 +42,40 @@ def create_splash_screen():
     return splash
 
 
+def check_updates_during_startup(splash, app):
+    """Verificar actualizaciones durante el splash screen"""
+    try:
+        splash.showMessage("🔄 Verificando actualizaciones...", 
+                          Qt.AlignCenter | Qt.AlignBottom, 
+                          Qt.white)
+        app.processEvents()
+        
+        from src.utils.updater import UpdateChecker
+        
+        checker = UpdateChecker(APP_VERSION, UPDATE_SERVER_URL)
+        update_info = checker.check_for_updates()
+        
+        if update_info:
+            splash.showMessage(f"🆕 Actualización disponible: v{update_info['version']}", 
+                              Qt.AlignCenter | Qt.AlignBottom, 
+                              Qt.yellow)
+            app.processEvents()
+            # Dar tiempo para que el usuario vea el mensaje
+            QTimer.singleShot(2000, lambda: None)
+        else:
+            splash.showMessage("✅ Aplicación actualizada", 
+                              Qt.AlignCenter | Qt.AlignBottom, 
+                              Qt.green)
+            app.processEvents()
+            
+    except Exception as e:
+        print(f"⚠️ Error verificando actualizaciones: {e}")
+        splash.showMessage("⚠️ No se pudo verificar actualizaciones", 
+                          Qt.AlignCenter | Qt.AlignBottom, 
+                          Qt.yellow)
+        app.processEvents()
+
+
 def load_components_async():
     """Cargar componentes de forma asíncrona después del splash"""
     # Importar solo cuando sea necesario
@@ -72,6 +106,10 @@ def main():
                       Qt.AlignCenter | Qt.AlignBottom, 
                       Qt.white)
     app.processEvents()
+    
+    # Verificar actualizaciones durante la carga
+    if UPDATE_CHECK_ON_STARTUP:
+        check_updates_during_startup(splash, app)
     
     try:
         LoginManager, MainWindow = load_components_async()

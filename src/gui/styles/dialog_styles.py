@@ -94,6 +94,35 @@ class DialogStyles:
                     stop: 1 #004085
                 );
             }}
+            
+            QPushButton[aboutUpdate="true"] {{
+                background: qlineargradient(
+                    x1: 0, y1: 0, x2: 0, y2: 1,
+                    stop: 0 {AppTheme.SUCCESS},
+                    stop: 1 #0d7337
+                );
+                color: {AppTheme.WHITE};
+                border: none;
+                border-radius: {AppTheme.BORDER_RADIUS_SMALL};
+                padding: 12px 20px;
+                font-size: {AppTheme.FONT_SIZE_NORMAL};
+                font-weight: bold;
+                font-family: {AppTheme.FONT_FAMILY};
+                min-width: 180px;
+            }}
+            
+            QPushButton[aboutUpdate="true"]:hover {{
+                background: qlineargradient(
+                    x1: 0, y1: 0, x2: 0, y2: 1,
+                    stop: 0 #0d7337,
+                    stop: 1 #0a5a2a
+                );
+            }}
+            
+            QPushButton[aboutUpdate="true"]:disabled {{
+                background: {AppTheme.MEDIUM_GRAY};
+                color: {AppTheme.TEXT_GRAY};
+            }}
         """
     
     @staticmethod
