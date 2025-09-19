@@ -1,8 +1,8 @@
 {
   "version": "1.2.6",
-  "download_url": "https://tu-servidor.com/releases/AlertasQB-v1.2.6.zip",
+  "download_url": "https://github.com/brunooviedo/AlertasQb/releases/download/v1.2.6/AlertasQB-v1.2.6.zip",
   "changelog": "Mejoras en dashboard: corregido renderizado de gráficos, ajustado tamaño de contenedores, solucionado sistema de actualización",
   "release_date": "2025-09-19 11:04:21",
-  "file_size": 89874044,
-  "checksum": "sha256_here"
+  "file_size": 89875756,
+  "checksum": "sha256:22b13c9d5e7d20544db09f32b87558b78ac2382c82c50f284dd0747641d42478"
 }
