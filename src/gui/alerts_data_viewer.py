@@ -271,7 +271,8 @@ class AlertsDataViewer(QWidget):
         if filter_type == "Todas":
             filtered_df = self.original_df.copy()
         else:
-            filtered_df = self.original_df[self.original_df['TipoAlerta'] == filter_type].copy()
+            # Filtrado case-insensitive para tipos de alerta
+            filtered_df = self.original_df[self.original_df['TipoAlerta'].str.lower() == filter_type.lower()].copy()
         
         # Aplicar búsqueda si hay texto
         search_text = self.search_input.text().strip()
@@ -290,7 +291,8 @@ class AlertsDataViewer(QWidget):
         if filter_type == "Todas":
             filtered_df = self.original_df.copy()
         else:
-            filtered_df = self.original_df[self.original_df['TipoAlerta'] == filter_type].copy()
+            # Filtrado case-insensitive para tipos de alerta
+            filtered_df = self.original_df[self.original_df['TipoAlerta'].str.lower() == filter_type.lower()].copy()
         
         # Aplicar búsqueda
         if search_text.strip():

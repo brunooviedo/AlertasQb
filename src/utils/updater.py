@@ -61,6 +61,8 @@ class UpdateChecker(QObject):
                 version_url = f"{self.update_server_url}/version.json"
             
             print(f"🔍 Verificando actualizaciones en: {version_url}")
+            print(f"🔧 DEBUG - update_server_url: {self.update_server_url}")
+            print(f"🔧 DEBUG - current_version: {self.current_version}")
             
             # Realizar petición HTTP con timeout y headers
             response = requests.get(version_url, timeout=self.timeout, headers=headers)
@@ -488,7 +490,7 @@ class UpdateDialog(QDialog):
 class AutoUpdater(QObject):
     """Clase principal del sistema de actualización"""
     
-    def __init__(self, app_version, update_server_url, parent=None):
+    def __init__(self, update_server_url, app_version, parent=None):
         super().__init__(parent)
         self.app_version = app_version
         self.update_server_url = update_server_url

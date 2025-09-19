@@ -94,9 +94,29 @@ class MainWindow(QMainWindow):
         """Configura la interfaz principal"""
         self.setWindowTitle("Sistema de Alertas Geotécnicas")
         
-        # Configurar ventana para que se abra maximizada
-        self.setMinimumSize(1200, 800)  # Tamaño mínimo
-        self.showMaximized()  # Abrir maximizada por defecto
+        # Configurar ventana responsiva para diferentes resoluciones
+        self.setMinimumSize(1024, 768)  # Tamaño mínimo compatible con resoluciones más pequeñas
+        
+        # Configurar política de tamaño para ventana principal
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        
+        # Detectar resolución de pantalla y ajustar comportamiento inicial
+        from PySide6.QtGui import QGuiApplication
+        screen = QGuiApplication.primaryScreen()
+        screen_geometry = screen.availableGeometry()
+        
+        # Si la pantalla es suficientemente grande, maximizar; si no, usar tamaño optimizado
+        if screen_geometry.width() >= 1400 and screen_geometry.height() >= 900:
+            self.showMaximized()  # Pantallas grandes
+        else:
+            # Pantallas más pequeñas - usar un porcentaje del tamaño disponible
+            width = int(screen_geometry.width() * 0.9)
+            height = int(screen_geometry.height() * 0.85)
+            self.resize(width, height)
+            self.move(
+                (screen_geometry.width() - width) // 2,
+                (screen_geometry.height() - height) // 2
+            )
         
         # Widget central
         central_widget = QWidget()
@@ -104,14 +124,14 @@ class MainWindow(QMainWindow):
         
         # Layout principal con configuración responsiva
         main_layout = QVBoxLayout(central_widget)
-        main_layout.setContentsMargins(15, 15, 15, 15)
-        main_layout.setSpacing(10)
+        main_layout.setContentsMargins(10, 10, 10, 10)  # Márgenes más pequeños para pantallas pequeñas
+        main_layout.setSpacing(8)
         
         # Header con información del usuario
         self.header_frame = HeaderWidget(self)
         main_layout.addWidget(self.header_frame)
         
-        # Tabs principales - carga lazy
+        # Tabs principales - carga lazy con configuración responsiva
         self.tab_widget = QTabWidget()
         self.tab_widget.setTabPosition(QTabWidget.North)
         self.tab_widget.setSizePolicy(QSizePolicy.Policy.Expanding, 
@@ -254,8 +274,8 @@ class MainWindow(QMainWindow):
         if self.alerts_data_viewer is not None:
             self.alerts_data_viewer.load_data()
         
-        # Mostrar notificación para alertas rojas
-        if alert_data['TipoAlerta'] == 'Roja':
+        # Mostrar notificación para alertas rojas (case-insensitive)
+        if alert_data['TipoAlerta'].lower() == 'roja':
             QMessageBox.information(
                 self, 
                 "Alerta Roja Registrada",

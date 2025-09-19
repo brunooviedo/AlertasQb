@@ -1,8 +1,8 @@
 {
-  "version": "1.2.3",
-  "download_url": "https://tu-servidor.com/releases/AlertasQB-v1.2.3.zip",
-  "changelog": "Corregida versión en diálogo About y mejorado logging de actualizaciones",
-  "release_date": "2025-08-22 22:28:19",
-  "file_size": 89731073,
+  "version": "1.2.6",
+  "download_url": "https://tu-servidor.com/releases/AlertasQB-v1.2.6.zip",
+  "changelog": "Mejoras en dashboard: corregido renderizado de gráficos, ajustado tamaño de contenedores, solucionado sistema de actualización",
+  "release_date": "2025-09-19 11:04:21",
+  "file_size": 89874044,
   "checksum": "sha256_here"
 }

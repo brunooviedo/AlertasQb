@@ -236,7 +236,7 @@ def initialize_updater(main_window, app):
         
         print(f"🔄 Inicializando sistema de actualización v{APP_VERSION}")
         
-        updater = AutoUpdater(APP_VERSION, UPDATE_SERVER_URL, main_window)
+        updater = AutoUpdater(UPDATE_SERVER_URL, APP_VERSION, main_window)
         updater.check_for_updates_on_startup()
         
         print("✅ Sistema de actualización inicializado")

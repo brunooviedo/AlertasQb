@@ -123,9 +123,11 @@ class ExcelManager:
                     mask_tipo_ok = mask_tipo_valido | mask_separador
                     mask_valid_rows &= mask_tipo_ok
                 
-                # Para Condicion, aplicar la misma lógica
+                # Para Condicion, aplicar la misma lógica (case-insensitive)
                 if 'Condicion' in df.columns:
-                    mask_condicion_valida = df['Condicion'].isin(VALID_CONDITIONS)
+                    # Normalizar condiciones para comparación case-insensitive
+                    valid_conditions_lower = [cond.lower() for cond in VALID_CONDITIONS]
+                    mask_condicion_valida = df['Condicion'].str.lower().isin(valid_conditions_lower)
                     # Permitir Condicion vacía solo para separadores
                     mask_condicion_ok = mask_condicion_valida | mask_separador
                     mask_valid_rows &= mask_condicion_ok

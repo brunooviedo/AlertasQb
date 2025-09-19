@@ -100,16 +100,18 @@ class KPIWidget(QFrame):
         self.value_label.setText(str(value))
 
 class ChartWidget(QFrame):
-    """Widget para mostrar gráficos"""
+    """Widget para mostrar gráficos con responsividad adaptativa"""
     
     def __init__(self, title):
         super().__init__()
         self.title = title
         self.setFrameStyle(QFrame.Box)
-        # Container principal con altura más moderada
-        self.setMinimumHeight(700)  # Reducido para mejor proporción
-        self.setMinimumWidth(500)   # Mantener ancho
-        self.setMaximumHeight(670)  # Aumentado también
+        
+        # Configuración responsiva - sin tamaños fijos
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        self.setMinimumHeight(500)  # Altura mínima aumentada para evitar cortes
+        self.setMinimumWidth(450)   # Ancho mínimo aumentado para mejor visualización
+        
         self.setStyleSheet("""
             QFrame {
                 background: white;
@@ -120,7 +122,7 @@ class ChartWidget(QFrame):
         """)
         
         layout = QVBoxLayout()
-        layout.setContentsMargins(10, 10, 10, 10)  # Más margen
+        layout.setContentsMargins(10, 10, 10, 10)
         
         # Título del gráfico
         title_label = QLabel(title)
@@ -128,10 +130,11 @@ class ChartWidget(QFrame):
         title_label.setStyleSheet("font-weight: bold; font-size: 14px; color: #333; margin-bottom: 10px;")
         layout.addWidget(title_label)
         
-        # Inicializar canvas sin cargar matplotlib aún
+        # Canvas responsivo con tamaño mejorado
         self.canvas = QLabel()
         self.canvas.setAlignment(Qt.AlignCenter)
-        self.canvas.setMinimumSize(900, 600)  # Canvas menos alto pero mismo ancho
+        self.canvas.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        self.canvas.setMinimumSize(400, 350)  # Tamaño mínimo aumentado para evitar cortes
         self.canvas.setStyleSheet("border: 1px solid #ddd; background: white;")
         self.canvas.setText("Cargando gráfico...")
         layout.addWidget(self.canvas)
@@ -158,9 +161,17 @@ class ChartWidget(QFrame):
             self.canvas.setText("📊 Gráficos no disponibles")
             return
             
-        # Crear figura si no existe
+        # Crear figura si no existe con tamaño dinámico
         if self.figure is None:
-            self.figure = Figure(figsize=(12, 8), dpi=75)
+            # Calcular tamaño basado en el widget actual
+            widget_width = max(self.canvas.width(), 300) / 100  # Convertir a pulgadas
+            widget_height = max(self.canvas.height(), 250) / 100
+            
+            # Limitar el tamaño para evitar figuras demasiado grandes o pequeñas
+            figsize_width = max(4, min(widget_width, 12))
+            figsize_height = max(3, min(widget_height, 8))
+            
+            self.figure = Figure(figsize=(figsize_width, figsize_height), dpi=80)
             self.figure.patch.set_facecolor('white')
             # Crear canvas de matplotlib para asegurar renderizado correcto
             self.figure.set_canvas(FigureCanvas(self.figure))
@@ -169,11 +180,11 @@ class ChartWidget(QFrame):
             # Asegurar que la figura esté completamente renderizada
             self.figure.canvas.draw()
             
-            # Guardar la figura en un buffer de memoria con padding máximo para mostrar todo
+            # Guardar la figura en un buffer de memoria con configuración optimizada para leyendas
             buf = io.BytesIO()
             self.figure.savefig(buf, format='png', dpi=90, bbox_inches='tight', 
-                               pad_inches=0.8, facecolor='white', edgecolor='none',
-                               transparent=False)  # Configuraciones específicas para ejecutables
+                               pad_inches=0.3, facecolor='white', edgecolor='none',
+                               transparent=False)  # Padding reducido pero suficiente para mostrar etiquetas
             buf.seek(0)
             
             # Crear QPixmap desde el buffer
@@ -280,8 +291,10 @@ class Dashboard(QWidget):
         self.setup_kpis()
         scroll_layout.addLayout(self.kpi_layout)
         
-        # Gráficos
+        # Gráficos con configuración mejorada
         self.charts_layout = QGridLayout()
+        self.charts_layout.setSpacing(20)  # Espaciado entre gráficos
+        self.charts_layout.setContentsMargins(10, 10, 10, 10)  # Márgenes del contenedor
         self.setup_charts()
         scroll_layout.addLayout(self.charts_layout)
         
@@ -427,11 +440,11 @@ class Dashboard(QWidget):
                     year_text = f"del año {year_filter}" if year_filter and year_filter != "Todos los años" else ""
                     print(f"⚠️ No se encontraron alertas para {month_filter} {year_text}")
         
-        # Filtro por tipo
+        # Filtro por tipo (case-insensitive)
         type_filter = self.type_combo.currentText().strip()
         if type_filter and type_filter != "Todos":
             before_type_filter = len(filtered_data)
-            filtered_data = filtered_data[filtered_data['TipoAlerta'] == type_filter]
+            filtered_data = filtered_data[filtered_data['TipoAlerta'].str.lower() == type_filter.lower()]
             after_type_filter = len(filtered_data)
             
             print(f"Filtro tipo {type_filter}: {after_type_filter} alertas")
@@ -589,11 +602,11 @@ class Dashboard(QWidget):
         total = len(data)
         self.total_kpi.update_value(str(total))
         
-        # Alertas por tipo
+        # Alertas por tipo (case-insensitive)
         if 'TipoAlerta' in data.columns:
-            red_count = len(data[data['TipoAlerta'] == 'Roja'])
-            orange_count = len(data[data['TipoAlerta'] == 'Naranja'])
-            yellow_count = len(data[data['TipoAlerta'] == 'Amarilla'])
+            red_count = len(data[data['TipoAlerta'].str.lower() == 'roja'])
+            orange_count = len(data[data['TipoAlerta'].str.lower() == 'naranja'])
+            yellow_count = len(data[data['TipoAlerta'].str.lower() == 'amarilla'])
             
             self.red_kpi.update_value(str(red_count))
             self.orange_kpi.update_value(str(orange_count))
@@ -791,9 +804,17 @@ class Dashboard(QWidget):
             
     def update_condition_chart(self, data):
         """Actualiza gráfico de condiciones de alerta"""
-        # Crear figura si no existe
+        # Crear figura si no existe con tamaño dinámico
         if self.condition_chart.figure is None:
-            self.condition_chart.figure = Figure(figsize=(12, 8), dpi=75)
+            # Calcular tamaño basado en el widget actual
+            widget_width = max(self.condition_chart.canvas.width(), 300) / 100
+            widget_height = max(self.condition_chart.canvas.height(), 250) / 100
+            
+            # Limitar el tamaño para evitar figuras demasiado grandes o pequeñas
+            figsize_width = max(4, min(widget_width, 10))
+            figsize_height = max(3, min(widget_height, 7))
+            
+            self.condition_chart.figure = Figure(figsize=(figsize_width, figsize_height), dpi=80)
             self.condition_chart.figure.patch.set_facecolor('white')
             self.condition_chart.figure.set_canvas(FigureCanvas(self.condition_chart.figure))
             
@@ -804,25 +825,31 @@ class Dashboard(QWidget):
             if len(condition_counts) > 0:
                 ax = self.condition_chart.figure.add_subplot(111)
                 
-                # Colores para las diferentes condiciones
+                # Colores para las diferentes condiciones (case-insensitive)
                 colors = {
-                    'Crítica': '#F44336', 
-                    'Progresiva': '#FF9800', 
-                    'Transgresiva': '#FFEB3B', 
-                    'Progresiva-Crítica': '#E91E63', 
-                    'Transgresiva-Progresiva': '#FF5722', 
-                    'Regresiva': '#4CAF50'
+                    'crítica': '#F44336', 
+                    'progresiva': '#FF9800', 
+                    'transgresiva': '#FFEB3B', 
+                    'progresiva-crítica': '#E91E63', 
+                    'transgresiva-progresiva': '#FF5722', 
+                    'regresiva': '#4CAF50'
                 }
                 
-                # Crear barras con colores
-                bar_colors = [colors.get(condition, '#9E9E9E') for condition in condition_counts.index]
+                # Crear barras con colores (usando comparación case-insensitive)
+                bar_colors = [colors.get(condition.lower(), '#9E9E9E') for condition in condition_counts.index]
                 bars = ax.bar(range(len(condition_counts)), condition_counts.values, color=bar_colors)
                 
-                # Configurar ejes y etiquetas
+                # Configurar ejes y etiquetas con mejor visualización
                 ax.set_xticks(range(len(condition_counts)))
                 ax.set_xticklabels(condition_counts.index, rotation=45, ha='right', fontsize=9)
                 ax.set_ylabel('Cantidad', fontsize=10)
                 ax.set_title('Distribución por Condición', fontsize=12, fontweight='bold', pad=20)
+                
+                # Ajustar layout para evitar recorte de etiquetas
+                self.condition_chart.figure.tight_layout(pad=2.0)
+                
+                # Ajustar márgenes específicamente para las etiquetas del eje X
+                self.condition_chart.figure.subplots_adjust(bottom=0.2)
                 
                 # Agregar valores en las barras
                 for bar, value in zip(bars, condition_counts.values):
@@ -882,9 +909,17 @@ class Dashboard(QWidget):
             
     def update_monthly_chart(self, data):
         """Actualiza gráfico de alertas por mes"""
-        # Crear figura si no existe
+        # Crear figura si no existe con tamaño dinámico
         if self.monthly_chart.figure is None:
-            self.monthly_chart.figure = Figure(figsize=(12, 8), dpi=75)
+            # Calcular tamaño basado en el widget actual
+            widget_width = max(self.monthly_chart.canvas.width(), 300) / 100
+            widget_height = max(self.monthly_chart.canvas.height(), 250) / 100
+            
+            # Limitar el tamaño para evitar figuras demasiado grandes o pequeñas
+            figsize_width = max(4, min(widget_width, 10))
+            figsize_height = max(3, min(widget_height, 7))
+            
+            self.monthly_chart.figure = Figure(figsize=(figsize_width, figsize_height), dpi=80)
             self.monthly_chart.figure.patch.set_facecolor('white')
             self.monthly_chart.figure.set_canvas(FigureCanvas(self.monthly_chart.figure))
             
@@ -914,11 +949,17 @@ class Dashboard(QWidget):
                            markersize=8, color='#FF6B35', markerfacecolor='#FF6B35')
                     ax.fill_between(months, all_months.values, alpha=0.3, color='#FF6B35')
                     
-                    # Configurar ejes
+                    # Configurar ejes con mejor visualización de etiquetas
                     ax.set_xticks(months)
-                    ax.set_xticklabels(month_names, fontsize=9)
+                    ax.set_xticklabels(month_names, fontsize=9, rotation=0, ha='center')
                     ax.set_ylabel('Número de Alertas', fontsize=10)
                     ax.set_title('Distribución de Alertas por Mes', fontsize=12, fontweight='bold', pad=20)
+                    
+                    # Ajustar layout para evitar recorte de etiquetas
+                    self.monthly_chart.figure.tight_layout(pad=2.0)
+                    
+                    # Ajustar márgenes para las etiquetas del eje X
+                    self.monthly_chart.figure.subplots_adjust(bottom=0.15)
                     
                     # Agregar valores en los puntos donde hay datos
                     for month, value in monthly_counts.items():
